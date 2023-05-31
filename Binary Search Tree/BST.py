@@ -62,90 +62,61 @@ class BST:
             self.right.post_order_traversal()
         print(self.key, end=' ')
 
-    def delete(self, data, current):
-        if self.key is None:
-            print("Tree is empty!")
-            return
-
+    def delete(self, data):
         if data < self.key:
+            # Value is smaller, so we need to go left.
             if self.left:
-                self.left = self.left.delete(data, current)
+                self.left = self.left.delete(data)
             else:
-                print("Given node is not present in the tree..")
+                # Value not found in the BST.
+                return self
         elif data > self.key:
+            # Value is greater, so we need to go right.
             if self.right:
-                self.right = self.right.delete(data, current)
+                self.right = self.right.delete(data)
             else:
-                print('Given node is not present in the tree..')
+                # Value not found in the BST.
+                return self
         else:
-            if self.left is None:
-                temp = self.right
-                if data == current:
-                    self.key = temp.key
-                    self.left = temp.left
-                    self.right = temp.right
-                    temp = None
-                    return
-                self = None
-                return temp
+            # We found the node to delete.
+            if not self.left and not self.right:
+                # Node is a leaf, simply delete it.
+                return None
+            elif not self.left:
+                # Node has no left child, replace it with the right child.
+                return self.right
+            elif not self.right:
+                # Node has no right child, replace it with the left child.
+                return self.left
+            else:
+                # Node has both left and right children.
+                # Find the minimum value in the right subtree (the smallest value greater than the current node).
+                min_node = self.right.smallest_node()
 
-            if self.right is None:
-                temp = self.left
-                if data == current:
-                    self.key = temp.key
-                    self.left = temp.left
-                    self.right = temp.right
-                    temp = None
-                    return
-                self = None
-                return temp
-
-            node = self.right
-            while node.left:
-                node = node.left
-            self.key = node.key
-            self.right = self.right.delete(node.key, current)
+                # Replace the current node's key with the minimum value found.
+                self.key = min_node.key
+                # Delete the minimum node from the right subtree.
+                self.right = self.right.delete(min_node.key)
         return self
 
     def smallest_node(self):
         current = self
         while current.left:
             current = current.left
-        print("Node with the smallest element: ", current.key)
+        return current
 
     def largest_node(self):
         current = self
         while current.right:
             current = current.right
-        print("Largest node: ", current.key)
-
-    def validate_bst(self):
-        return self._validate_bst_helper(float('-inf'), float('inf'))
-
-    def _validate_bst_helper(self, min_val, max_val):
-        if self is None:
-            return True
-
-        if self.key <= min_val or self.key >= max_val:
-            return False
-
-        left_valid = True
-        right_valid = True
-
-        if self.left:
-            left_valid = self.left._validate_bst_helper(min_val, self.key)
-
-        if self.right:
-            right_valid = self.right._validate_bst_helper(self.key, max_val)
-
-        return left_valid and right_valid
+        return current
 
     def find_closest_value(self, target):
         closest = self.key
         current = self
 
         while current:
-            if abs(target - current.key) < abs(target - closest) and current.key!= target:
+            if abs(target - current.key) < abs(target - closest) and current.key != target:
                 closest = current.key
 
             if target < current.key:
@@ -164,6 +135,17 @@ def count(node):
     return 1 + count(node.left) + count(node.right)
 
 
+def is_valid_bst(root1):
+    def is_valid(node, min_val, max_val):
+        if node is None:
+            return True
+        if node.key <= min_val or node.key >= max_val:
+            return False
+        return is_valid(node.left, min_val, node.key) and is_valid(node.right, node.key, max_val)
+
+    return is_valid(root1, float('-inf'), float('inf'))
+
+
 root = BST(10)
 list1 = [20, 11, 6, 13, -1, 8, 12000, 15]
 for i in list1:
@@ -172,7 +154,7 @@ root.search(60)
 
 print("After deletion: ")
 if count(root) > 1:
-    root.delete(10, root.key)
+    root.delete(10)
 else:
     print("Can't perform deletion operation")
 print("---pre order-----")
@@ -182,7 +164,7 @@ root.pre_order_traversal()
 root.smallest_node()
 root.largest_node()
 
-result = root.validate_bst()
+result = is_valid_bst(root)
 
 if result is True:
     print("BST is valid")
